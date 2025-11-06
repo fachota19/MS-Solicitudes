@@ -1,0 +1,31 @@
+### 🔹 1. Obtener todas las solicitudes
+GET http://localhost:8081/api/solicitudes
+Accept: application/json
+
+### 🔹 2. Crear una nueva solicitud
+POST http://localhost:8081/api/solicitudes
+Content-Type: application/json
+
+{
+  "fechaCreacion": "2025-11-06",
+  "estado": "PENDIENTE",
+  "costoEstimado": 18500.75,
+  "clienteId": 1,
+  "tarifaId": 2,
+  "camionId": 3
+}
+
+### 🔹 3. Obtener una solicitud por ID
+GET http://localhost:8081/api/solicitudes/1
+Accept: application/json
+
+### 🔹 4. Actualizar una solicitud
+PUT http://localhost:8081/api/solicitudes/1
+Content-Type: application/json
+
+{
+  "estado": "EN_PROCESO"
+}
+
+### 🔹 5. Eliminar una solicitud
+DELETE http://localhost:8081/api/solicitudes/1

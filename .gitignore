@@ -1,0 +1,20 @@
+# Archivos compilados
+target/
+out/
+
+# Configuración del IDE
+.idea/
+.vscode/
+*.iml
+
+# Archivos del sistema
+.DS_Store
+Thumbs.db
+
+# Archivos temporales
+*.log
+*.tmp
+
+# Variables de entorno o configuraciones locales
+application-local.properties
+.env
