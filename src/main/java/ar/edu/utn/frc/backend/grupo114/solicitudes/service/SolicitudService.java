@@ -2,35 +2,31 @@ package ar.edu.utn.frc.backend.grupo114.solicitudes.service;
 
 import ar.edu.utn.frc.backend.grupo114.solicitudes.model.Solicitud;
 import java.util.List;
+import java.util.Map;
+import java.util.Optional;
 
-/**
- * Interfaz que define las operaciones de negocio para gestionar Solicitudes.
- * Esta capa intermedia desacopla el controlador del repositorio.
- */
 public interface SolicitudService {
 
-    /**
-     * Devuelve todas las solicitudes registradas.
-     */
+    // 🔹 Listar todas las solicitudes
     List<Solicitud> listarTodas();
 
-    /**
-     * Busca una solicitud específica por su ID.
-     */
-    Solicitud obtenerPorId(Long id);
+    // 🔹 Obtener una solicitud por ID
+    Optional<Solicitud> obtenerPorId(Long id);
 
-    /**
-     * Crea una nueva solicitud.
-     */
+    // 🔹 Crear una nueva solicitud
     Solicitud crear(Solicitud solicitud);
 
-    /**
-     * Actualiza una solicitud existente.
-     */
-    Solicitud actualizar(Long id, Solicitud solicitud);
-
-    /**
-     * Elimina una solicitud por ID.
-     */
+    // 🔹 Eliminar solicitud
     void eliminar(Long id);
+
+    // 🔹 Obtener seguimiento (estado + tramos + ruta)
+    Optional<Map<String, Object>> obtenerSeguimiento(Long id);
+
+    // 🔹 Asignar una ruta a una solicitud
+    Solicitud asignarRuta(Long solicitudId, Long rutaId);
+
+    // 🔹 Método opcional (para compatibilidad con versiones anteriores)
+    default Solicitud actualizar(Long id, Solicitud solicitud) {
+        throw new UnsupportedOperationException("No implementado");
+    }
 }

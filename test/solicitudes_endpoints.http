@@ -1,0 +1,49 @@
+### ============================================
+### MICROSERVICIO SOLICITUDES - Endpoints
+### ============================================
+
+@baseUrl = http://localhost:8084/api
+@gatewayUrl = http://localhost:8080/api
+
+### ========== SOLICITUDES ==========
+
+### 1. Listar todas las solicitudes (OPERADOR)
+GET {{baseUrl}}/solicitudes
+Accept: application/json
+
+###
+
+### 2. Crear nueva solicitud (CLIENTE)
+POST {{baseUrl}}/solicitudes
+Content-Type: application/json
+
+{
+  "clienteId": 1,
+  "contenedorId": 1,
+  "tarifaId": 1,
+  "camionId": 3,
+  "fechaCreacion": "2025-11-10",
+  "origenDireccion": "Calle 123",
+  "destinoDireccion": "Ruta 9 km 500",
+  "costoEstimado": 18500.75,
+  "estadoId": 1
+}
+
+###
+
+### 3. Obtener solicitud por ID
+GET {{baseUrl}}/solicitudes/1
+Accept: application/json
+
+###
+
+### 4. Ver seguimiento de solicitud (CLIENTE)
+GET {{baseUrl}}/solicitudes/1/seguimiento
+Accept: application/json
+
+###
+
+### 5. Asignar ruta a solicitud (OPERADOR)
+PUT {{baseUrl}}/solicitudes/1/ruta/1
+
+###

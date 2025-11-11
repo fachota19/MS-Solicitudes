@@ -1,78 +1,128 @@
 package ar.edu.utn.frc.backend.grupo114.solicitudes.service.impl;
 
-import ar.edu.utn.frc.backend.grupo114.solicitudes.model.Solicitud;
-import ar.edu.utn.frc.backend.grupo114.solicitudes.repository.SolicitudRepository;
+import ar.edu.utn.frc.backend.grupo114.solicitudes.model.*;
+import ar.edu.utn.frc.backend.grupo114.solicitudes.repository.*;
 import ar.edu.utn.frc.backend.grupo114.solicitudes.service.SolicitudService;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.server.ResponseStatusException;
 
-import java.util.List;
+import java.util.*;
 
-/**
- * Implementación del servicio de Solicitudes.
- * Contiene la lógica de negocio que gestiona las operaciones CRUD.
- */
+@Slf4j
 @Service
+@Transactional
 public class SolicitudServiceImpl implements SolicitudService {
 
-    private final SolicitudRepository repository;
+    private final SolicitudRepository solicitudRepository;
+    private final TipoEstadoRepository tipoEstadoRepository;
+    private final RutaRepository rutaRepository;
 
-    // Inyección de dependencias por constructor
-    public SolicitudServiceImpl(SolicitudRepository repository) {
-        this.repository = repository;
+    public SolicitudServiceImpl(
+            SolicitudRepository solicitudRepository,
+            TipoEstadoRepository tipoEstadoRepository,
+            RutaRepository rutaRepository
+    ) {
+        this.solicitudRepository = solicitudRepository;
+        this.tipoEstadoRepository = tipoEstadoRepository;
+        this.rutaRepository = rutaRepository;
     }
 
     @Override
     public List<Solicitud> listarTodas() {
-        return repository.findAll();
+        log.info("Listando todas las solicitudes");
+        return solicitudRepository.findAll();
     }
 
     @Override
-    public Solicitud obtenerPorId(Long id) {
-        return repository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Solicitud no encontrada con ID: " + id));
+    public Optional<Solicitud> obtenerPorId(Long id) {
+        log.info("Buscando solicitud con ID: {}", id);
+        return solicitudRepository.findById(id);
     }
 
     @Override
     public Solicitud crear(Solicitud solicitud) {
-        // Si la fecha no viene, se inicializa con la actual
-        if (solicitud.getFechaCreacion() == null) {
-            solicitud.setFechaCreacion(java.time.LocalDate.now());
+        log.info("Creando nueva solicitud para cliente: {}", solicitud.getClienteId());
+        
+        // Generar número de seguimiento si no existe
+        if (solicitud.getNumeroSeguimiento() == null || solicitud.getNumeroSeguimiento().isEmpty()) {
+            solicitud.setNumeroSeguimiento("SOL-" + System.currentTimeMillis());
         }
-        // Estado por defecto si no se especifica
+
+        // Asignar estado PENDIENTE si no tiene
         if (solicitud.getEstado() == null) {
-            solicitud.setEstado("PENDIENTE");
-        }
-        return repository.save(solicitud);
-    }
-
-    @Override
-    public Solicitud actualizar(Long id, Solicitud solicitud) {
-        Solicitud existente = obtenerPorId(id);
-
-        if (solicitud.getEstado() != null) {
-            existente.setEstado(solicitud.getEstado());
-        }
-        if (solicitud.getCostoEstimado() != null) {
-            existente.setCostoEstimado(solicitud.getCostoEstimado());
-        }
-        if (solicitud.getCamionId() != null) {
-            existente.setCamionId(solicitud.getCamionId());
-        }
-        if (solicitud.getTarifaId() != null) {
-            existente.setTarifaId(solicitud.getTarifaId());
-        }
-        if (solicitud.getClienteId() != null) {
-            existente.setClienteId(solicitud.getClienteId());
+            TipoEstado estadoPendiente = tipoEstadoRepository.findByNombre("PENDIENTE");
+            if (estadoPendiente == null) {
+                throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, 
+                    "No se encontró el estado PENDIENTE en la base de datos");
+            }
+            solicitud.setEstado(estadoPendiente);
         }
 
-        return repository.save(existente);
+        Solicitud nuevaSolicitud = solicitudRepository.save(solicitud);
+        log.info("Solicitud creada exitosamente con ID: {} y número de seguimiento: {}", 
+            nuevaSolicitud.getId(), nuevaSolicitud.getNumeroSeguimiento());
+        
+        return nuevaSolicitud;
     }
 
     @Override
     public void eliminar(Long id) {
-        if (!repository.existsById(id)) {
-            throw new RuntimeException("No se puede eliminar: Solicitud con ID " + id + " no existe.");
+        log.info("Eliminando solicitud con ID: {}", id);
+        
+        if (!solicitudRepository.existsById(id)) {
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, 
+                "No se encontró la solicitud con ID: " + id);
         }
-        repository.deleteById(id);
+        
+        solicitudRepository.deleteById(id);
+        log.info("Solicitud con ID {} eliminada exitosamente", id);
+    }
+
+    @Override
+    public Optional<Map<String, Object>> obtenerSeguimiento(Long id) {
+        log.info("Obteniendo seguimiento de solicitud con ID: {}", id);
+        
+        return solicitudRepository.findById(id).map(s -> {
+            Map<String, Object> seguimiento = new LinkedHashMap<>();
+            seguimiento.put("id", s.getId());
+            seguimiento.put("numeroSeguimiento", s.getNumeroSeguimiento());
+            seguimiento.put("estado", s.getEstado() != null ? s.getEstado().getNombre() : "SIN_ESTADO");
+            seguimiento.put("origen", s.getOrigenDireccion());
+            seguimiento.put("destino", s.getDestinoDireccion());
+            seguimiento.put("fechaCreacion", s.getFechaCreacion());
+            seguimiento.put("costoEstimado", s.getCostoEstimado());
+
+            if (s.getRuta() != null && s.getRuta().getTramos() != null) {
+                seguimiento.put("rutaId", s.getRuta().getId());
+                seguimiento.put("cantidadTramos", s.getRuta().getTramos().size());
+            } else {
+                seguimiento.put("rutaId", null);
+                seguimiento.put("cantidadTramos", 0);
+            }
+            
+            return seguimiento;
+        });
+    }
+
+    @Override
+    public Solicitud asignarRuta(Long solicitudId, Long rutaId) {
+        log.info("Asignando ruta {} a solicitud {}", rutaId, solicitudId);
+        
+        Solicitud solicitud = solicitudRepository.findById(solicitudId)
+            .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, 
+                "Solicitud no encontrada con ID: " + solicitudId));
+
+        Ruta ruta = rutaRepository.findById(rutaId)
+            .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, 
+                "Ruta no encontrada con ID: " + rutaId));
+
+        solicitud.setRuta(ruta);
+        Solicitud actualizada = solicitudRepository.save(solicitud);
+        
+        log.info("Ruta asignada exitosamente a la solicitud {}", solicitudId);
+        return actualizada;
     }
 }
