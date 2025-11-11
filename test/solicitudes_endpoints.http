@@ -47,3 +47,44 @@ Accept: application/json
 PUT {{baseUrl}}/solicitudes/1/ruta/1
 
 ###
+
+### ========== TRAMOS ==========
+
+### 6. Iniciar tramo (TRANSPORTISTA)
+PUT {{baseUrl}}/tramos/1/iniciar
+Content-Type: application/json
+
+{
+  "fechaHoraInicioReal": "2025-11-10T09:30:00"
+}
+
+###
+
+### 7. Finalizar tramo (TRANSPORTISTA)
+PUT {{baseUrl}}/tramos/1/finalizar
+Content-Type: application/json
+
+{
+  "fechaHoraFinReal": "2025-11-10T13:45:00"
+}
+
+###
+
+### ========== CONTENEDORES ==========
+
+### 8. Listar contenedores
+GET {{baseUrl}}/contenedores
+Accept: application/json
+
+###
+
+### 9. Crear contenedor
+POST {{baseUrl}}/contenedores
+Content-Type: application/json
+
+{
+  "pesoKg": 2500,
+  "volumenM3": 12.5
+}
+
+###
