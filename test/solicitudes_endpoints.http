@@ -1,90 +1,105 @@
-### ============================================
-### MICROSERVICIO SOLICITUDES - Endpoints
-### ============================================
+### ===========================
+### MS-SOLICITUDES - ENDPOINTS COMPLETOS
+### ===========================
 
-@baseUrl = http://localhost:8084/api
-@gatewayUrl = http://localhost:8080/api
+@baseUrl = http://localhost:8085/api
 
 ### ========== SOLICITUDES ==========
 
-### 1. Listar todas las solicitudes (OPERADOR)
+### 1) Listar todas las solicitudes
 GET {{baseUrl}}/solicitudes
-Accept: application/json
 
 ###
 
-### 2. Crear nueva solicitud (CLIENTE)
+### 2) Obtener solicitud por ID
+GET {{baseUrl}}/solicitudes/1
+
+###
+
+### 3) Crear nueva solicitud
 POST {{baseUrl}}/solicitudes
 Content-Type: application/json
 
 {
   "clienteId": 1,
-  "contenedorId": 1,
-  "tarifaId": 1,
-  "camionId": 3,
-  "fechaCreacion": "2025-11-10",
-  "origenDireccion": "Calle 123",
-  "destinoDireccion": "Ruta 9 km 500",
-  "costoEstimado": 18500.75,
-  "estadoId": 1
+  "contenedor": {
+    "pesoKg": 3500,
+    "volumenM3": 18
+  },
+  "origenDireccion": "Av. Corrientes 1500, CABA",
+  "destinoDireccion": "Bv. Oroño 500, Rosario"
 }
 
 ###
 
-### 3. Obtener solicitud por ID
-GET {{baseUrl}}/solicitudes/1
-Accept: application/json
-
-###
-
-### 4. Ver seguimiento de solicitud (CLIENTE)
+### 4) Obtener seguimiento
 GET {{baseUrl}}/solicitudes/1/seguimiento
-Accept: application/json
 
 ###
 
-### 5. Asignar ruta a solicitud (OPERADOR)
-PUT {{baseUrl}}/solicitudes/1/ruta/1
+### 5) Crear y asignar ruta a solicitud (CORREGIDO)
+POST {{baseUrl}}/solicitudes/2/ruta
+
+###
+
+### 6) Eliminar solicitud
+DELETE {{baseUrl}}/solicitudes/2
+
+###
+
+### ========== RUTAS ==========
+
+### 7) Obtener ruta de solicitud
+GET {{baseUrl}}/rutas/solicitud/1
 
 ###
 
 ### ========== TRAMOS ==========
 
-### 6. Iniciar tramo (TRANSPORTISTA)
+### 8) Iniciar tramo
 PUT {{baseUrl}}/tramos/1/iniciar
 Content-Type: application/json
 
 {
-  "fechaHoraInicioReal": "2025-11-10T09:30:00"
+  "fechaHoraInicioReal": "2025-11-16T10:00:00"
 }
 
 ###
 
-### 7. Finalizar tramo (TRANSPORTISTA)
+### 9) Finalizar tramo
 PUT {{baseUrl}}/tramos/1/finalizar
 Content-Type: application/json
 
 {
-  "fechaHoraFinReal": "2025-11-10T13:45:00"
+  "fechaHoraFinReal": "2025-11-16T15:30:00"
 }
 
 ###
 
 ### ========== CONTENEDORES ==========
 
-### 8. Listar contenedores
+### 10) Listar contenedores
 GET {{baseUrl}}/contenedores
-Accept: application/json
 
 ###
 
-### 9. Crear contenedor
+### 11) Obtener contenedor por ID
+GET {{baseUrl}}/contenedores/1
+
+###
+
+### 12) Crear contenedor
 POST {{baseUrl}}/contenedores
 Content-Type: application/json
 
 {
-  "pesoKg": 2500,
-  "volumenM3": 12.5
+  "pesoKg": 4000,
+  "volumenM3": 20
 }
+
+###
+
+### 13) Eliminar contenedor
+DELETE {{baseUrl}}/contenedores/6
 
 ###

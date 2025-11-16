@@ -12,4 +12,10 @@ public interface SolicitudRepository extends JpaRepository<Solicitud, Long> {
 
     // Buscar por número de seguimiento (si se usa para tracking)
     Solicitud findByNumeroSeguimiento(String numeroSeguimiento);
+
+    long countByContenedorId(Long contenedorId);
+
 }
+
+
+

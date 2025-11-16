@@ -115,14 +115,31 @@ public class SolicitudServiceImpl implements SolicitudService {
             .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, 
                 "Solicitud no encontrada con ID: " + solicitudId));
 
-        Ruta ruta = rutaRepository.findById(rutaId)
-            .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, 
-                "Ruta no encontrada con ID: " + rutaId));
-
-        solicitud.setRuta(ruta);
+        // 🔥 CREAR NUEVA RUTA EN LUGAR DE BUSCAR UNA EXISTENTE
+        Ruta nuevaRuta = new Ruta();
+        nuevaRuta.setSolicitud(solicitud);
+        Ruta rutaGuardada = rutaRepository.save(nuevaRuta);
+        
+        solicitud.setRuta(rutaGuardada);
         Solicitud actualizada = solicitudRepository.save(solicitud);
         
         log.info("Ruta asignada exitosamente a la solicitud {}", solicitudId);
+        return actualizada;
+    }
+
+    @Override
+    public Solicitud actualizar(Long id, Solicitud solicitud) {
+        log.info("Actualizando solicitud con ID: {}", id);
+        
+        if (!solicitudRepository.existsById(id)) {
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, 
+                "No se encontró la solicitud con ID: " + id);
+        }
+        
+        solicitud.setId(id);
+        Solicitud actualizada = solicitudRepository.save(solicitud);
+        
+        log.info("Solicitud con ID {} actualizada exitosamente", id);
         return actualizada;
     }
 }

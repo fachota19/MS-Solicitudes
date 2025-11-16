@@ -10,11 +10,18 @@ import java.time.LocalDateTime;
 @AllArgsConstructor
 public class TramoDTO {
     private Long id;
-    private String origen;
-    private String destino;
     private Integer orden;
+    private Long estadoId;
+    private Double distanciaEstimadaKm;
+    private Double costoEstimado;
     private LocalDateTime fechaHoraInicioEstimada;
     private LocalDateTime fechaHoraFinEstimada;
+    private Long tipoTramoId;
     private LocalDateTime fechaHoraInicioReal;
     private LocalDateTime fechaHoraFinReal;
+    private Double costoReal;
+    private Long rutaId;
+    private Long camionId;
+    private Long origenDepositoId;
+    private Long destinoDepositoId;
 }

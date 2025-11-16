@@ -31,10 +31,17 @@ public class RutaServiceImpl implements RutaService {
     }
 
     @Override
+    @Transactional(readOnly = true)  // ✅ IMPORTANTE: Mantener la sesión abierta
     public Ruta obtenerPorSolicitud(Long solicitudId) {
         Ruta ruta = rutaRepository.findBySolicitudId(solicitudId);
-        if (ruta == null)
-            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "No se encontró ruta para la solicitud " + solicitudId);
+        if (ruta == null) {
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, 
+                "No se encontró ruta para la solicitud " + solicitudId);
+        }
+        
+        // 🔥 FORZAR LA CARGA DE LOS TRAMOS
+        ruta.getTramos().size();  // Esto inicializa la colección lazy
+        
         return ruta;
     }
 }

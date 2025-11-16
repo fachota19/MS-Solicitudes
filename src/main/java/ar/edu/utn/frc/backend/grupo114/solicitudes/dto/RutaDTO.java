@@ -10,6 +10,6 @@ import java.util.List;
 @AllArgsConstructor
 public class RutaDTO {
     private Long id;
-    private String nombre;
+    private Long solicitudId;
     private List<TramoDTO> tramos;
 }

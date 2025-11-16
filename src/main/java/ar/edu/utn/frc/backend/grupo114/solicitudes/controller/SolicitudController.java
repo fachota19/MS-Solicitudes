@@ -1,9 +1,16 @@
 package ar.edu.utn.frc.backend.grupo114.solicitudes.controller;
 
+import ar.edu.utn.frc.backend.grupo114.solicitudes.dto.CrearSolicitudRequest;
 import ar.edu.utn.frc.backend.grupo114.solicitudes.dto.SolicitudDTO;
 import ar.edu.utn.frc.backend.grupo114.solicitudes.mapper.SolicitudMapper;
+import ar.edu.utn.frc.backend.grupo114.solicitudes.model.Contenedor;
+import ar.edu.utn.frc.backend.grupo114.solicitudes.model.Ruta;
 import ar.edu.utn.frc.backend.grupo114.solicitudes.model.Solicitud;
+import ar.edu.utn.frc.backend.grupo114.solicitudes.model.TipoEstado;
+import ar.edu.utn.frc.backend.grupo114.solicitudes.repository.RutaRepository;
+import ar.edu.utn.frc.backend.grupo114.solicitudes.service.ContenedorService;
 import ar.edu.utn.frc.backend.grupo114.solicitudes.service.SolicitudService;
+import ar.edu.utn.frc.backend.grupo114.solicitudes.service.TipoEstadoService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
@@ -13,7 +20,9 @@ import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.server.ResponseStatusException;
 
+import java.time.LocalDate;
 import java.util.List;
 
 @RestController
@@ -24,9 +33,21 @@ import java.util.List;
 public class SolicitudController {
 
     private final SolicitudService solicitudService;
+    private final ContenedorService contenedorService;
+    private final TipoEstadoService tipoEstadoService;
+    private final RutaRepository rutaRepository;  // ✅ AGREGADO
 
-    public SolicitudController(SolicitudService solicitudService) {
+    // ✅ CONSTRUCTOR ACTUALIZADO
+    public SolicitudController(
+            SolicitudService solicitudService,
+            ContenedorService contenedorService,
+            TipoEstadoService tipoEstadoService,
+            RutaRepository rutaRepository
+    ) {
         this.solicitudService = solicitudService;
+        this.contenedorService = contenedorService;
+        this.tipoEstadoService = tipoEstadoService;
+        this.rutaRepository = rutaRepository;
     }
 
     @Operation(
@@ -35,8 +56,12 @@ public class SolicitudController {
     )
     @ApiResponse(responseCode = "200", description = "Lista de solicitudes obtenida exitosamente")
     @GetMapping
-    public ResponseEntity<List<Solicitud>> listarTodas() {
-        return ResponseEntity.ok(solicitudService.listarTodas());
+    public ResponseEntity<List<SolicitudDTO>> listarTodas() {
+        List<SolicitudDTO> dtos = solicitudService.listarTodas()
+            .stream()
+            .map(SolicitudMapper::toDTO)
+            .toList();
+        return ResponseEntity.ok(dtos);
     }
 
     @Operation(
@@ -61,8 +86,32 @@ public class SolicitudController {
     @ApiResponse(responseCode = "201", description = "Solicitud creada exitosamente")
     @ApiResponse(responseCode = "400", description = "Datos inválidos")
     @PostMapping
-    public ResponseEntity<SolicitudDTO> crear(@Valid @RequestBody SolicitudDTO solicitudDTO) {
-        Solicitud nueva = solicitudService.crear(SolicitudMapper.fromDTO(solicitudDTO));
+    public ResponseEntity<SolicitudDTO> crear(@Valid @RequestBody CrearSolicitudRequest request) {
+        // 1️⃣ Crear el contenedor
+        Contenedor contenedor = new Contenedor();
+        contenedor.setPesoKg(request.getContenedor().getPesoKg());
+        contenedor.setVolumenM3(request.getContenedor().getVolumenM3());
+        Contenedor contenedorGuardado = contenedorService.crear(contenedor);
+        
+        // 2️⃣ Crear la solicitud
+        Solicitud solicitud = new Solicitud();
+        solicitud.setClienteId(request.getClienteId());
+        solicitud.setContenedor(contenedorGuardado);
+        solicitud.setOrigenDireccion(request.getOrigenDireccion());
+        solicitud.setDestinoDireccion(request.getDestinoDireccion());
+        solicitud.setFechaCreacion(LocalDate.now());
+        solicitud.setTarifaId(1L);  // Tarifa por defecto
+        
+        // 3️⃣ Asignar estado PENDIENTE
+        TipoEstado estadoPendiente = tipoEstadoService.obtenerPorNombre("PENDIENTE");
+        if (estadoPendiente == null) {
+            throw new IllegalStateException("No se encontró el estado PENDIENTE en la base de datos");
+        }
+        solicitud.setEstado(estadoPendiente);
+        
+        // 4️⃣ Guardar solicitud
+        Solicitud nueva = solicitudService.crear(solicitud);
+        
         return ResponseEntity.status(HttpStatus.CREATED).body(SolicitudMapper.toDTO(nueva));
     }
 
@@ -81,16 +130,39 @@ public class SolicitudController {
     }
 
     @Operation(
-        summary = "Asignar ruta a solicitud",
-        description = "Asigna una ruta existente a una solicitud (solo OPERADOR)"
+        summary = "Crear y asignar ruta a solicitud",
+        description = "Crea una nueva ruta vacía y la asigna a una solicitud (solo OPERADOR)"
     )
-    @ApiResponse(responseCode = "200", description = "Ruta asignada exitosamente")
-    @ApiResponse(responseCode = "404", description = "Solicitud o ruta no encontrada")
-    @PutMapping("/{id}/ruta/{rutaId}")
-    public ResponseEntity<SolicitudDTO> asignarRuta(
-            @Parameter(description = "ID de la solicitud") @PathVariable("id") Long solicitudId,
-            @Parameter(description = "ID de la ruta") @PathVariable("rutaId") Long rutaId) {
-        Solicitud actualizada = solicitudService.asignarRuta(solicitudId, rutaId);
+    @ApiResponse(responseCode = "200", description = "Ruta creada y asignada exitosamente")
+    @ApiResponse(responseCode = "404", description = "Solicitud no encontrada")
+    @ApiResponse(responseCode = "400", description = "La solicitud ya tiene una ruta asignada")
+    @PostMapping("/{id}/ruta")  // ✅ CAMBIADO: POST sin {rutaId}
+    public ResponseEntity<SolicitudDTO> crearYAsignarRuta(
+            @Parameter(description = "ID de la solicitud") @PathVariable("id") Long solicitudId) {
+        
+        // 1️⃣ Buscar la solicitud
+        Solicitud solicitud = solicitudService.obtenerPorId(solicitudId)
+            .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, 
+                "Solicitud no encontrada con ID: " + solicitudId));
+        
+        // 2️⃣ Validar que no tenga ya una ruta asignada
+        if (solicitud.getRuta() != null) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, 
+                "La solicitud ya tiene una ruta asignada");
+        }
+        
+        // 3️⃣ Crear nueva ruta vacía
+        Ruta nuevaRuta = Ruta.builder()
+            .solicitud(solicitud)
+            .build();
+        
+        // 4️⃣ Guardar la ruta
+        Ruta rutaGuardada = rutaRepository.save(nuevaRuta);
+        
+        // 5️⃣ Asignar la ruta a la solicitud
+        solicitud.setRuta(rutaGuardada);
+        Solicitud actualizada = solicitudService.actualizar(solicitudId, solicitud);
+        
         return ResponseEntity.ok(SolicitudMapper.toDTO(actualizada));
     }
 

@@ -1,5 +1,7 @@
 package ar.edu.utn.frc.backend.grupo114.solicitudes.controller;
 
+import ar.edu.utn.frc.backend.grupo114.solicitudes.dto.RutaDTO;
+import ar.edu.utn.frc.backend.grupo114.solicitudes.mapper.RutaMapper;
 import ar.edu.utn.frc.backend.grupo114.solicitudes.model.Ruta;
 import ar.edu.utn.frc.backend.grupo114.solicitudes.service.RutaService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -24,9 +26,9 @@ public class RutaController {
 
     @Operation(summary = "Obtener ruta de una solicitud")
     @GetMapping("/solicitud/{id}")
-    public ResponseEntity<Ruta> obtenerPorSolicitud(
+    public ResponseEntity<RutaDTO> obtenerPorSolicitud(
             @Parameter(description = "ID de la solicitud") @PathVariable Long id) {
         Ruta ruta = rutaService.obtenerPorSolicitud(id);
-        return ResponseEntity.ok(ruta);
+        return ResponseEntity.ok(RutaMapper.toDTO(ruta));  // ✅ DEVOLVER DTO
     }
 }
