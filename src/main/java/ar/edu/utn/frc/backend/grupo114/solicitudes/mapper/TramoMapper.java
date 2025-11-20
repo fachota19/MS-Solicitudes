@@ -1,15 +1,16 @@
 package ar.edu.utn.frc.backend.grupo114.solicitudes.mapper;
 
 import ar.edu.utn.frc.backend.grupo114.solicitudes.dto.TramoDTO;
+import ar.edu.utn.frc.backend.grupo114.solicitudes.model.TipoEstado;
+import ar.edu.utn.frc.backend.grupo114.solicitudes.model.TipoTramo;
 import ar.edu.utn.frc.backend.grupo114.solicitudes.model.Tramo;
+import ar.edu.utn.frc.backend.grupo114.solicitudes.model.Ruta;
 
 public class TramoMapper {
 
     public static TramoDTO toDTO(Tramo entity) {
-        if (entity == null) {
-            return null;
-        }
-        
+        if (entity == null) return null;
+
         TramoDTO dto = new TramoDTO();
         dto.setId(entity.getId());
         dto.setOrden(entity.getOrden());
@@ -28,5 +29,29 @@ public class TramoMapper {
         dto.setDestinoDepositoId(entity.getDestinoDepositoId());
         
         return dto;
+    }
+
+    public static Tramo toEntity(TramoDTO dto) {
+        if (dto == null) return null;
+
+        Tramo entity = new Tramo();
+        entity.setId(dto.getId());
+        entity.setOrden(dto.getOrden());
+
+        // Las entidades relacionadas (estado, tipoTramo, ruta) deben asignarse en el service
+        // porque requieren acceso al repositorio correspondiente.
+
+        entity.setDistanciaEstimadaKm(dto.getDistanciaEstimadaKm());
+        entity.setCostoEstimado(dto.getCostoEstimado());
+        entity.setFechaHoraInicioEstimada(dto.getFechaHoraInicioEstimada());
+        entity.setFechaHoraFinEstimada(dto.getFechaHoraFinEstimada());
+        entity.setFechaHoraInicioReal(dto.getFechaHoraInicioReal());
+        entity.setFechaHoraFinReal(dto.getFechaHoraFinReal());
+        entity.setCostoReal(dto.getCostoReal());
+        entity.setCamionId(dto.getCamionId());
+        entity.setOrigenDepositoId(dto.getOrigenDepositoId());
+        entity.setDestinoDepositoId(dto.getDestinoDepositoId());
+
+        return entity;
     }
 }

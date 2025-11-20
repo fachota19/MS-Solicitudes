@@ -1,105 +1,52 @@
-### ===========================
-### MS-SOLICITUDES - ENDPOINTS COMPLETOS
-### ===========================
+### Variables comunes
+@baseUrl = http://localhost:8080/api
+@token = PONER_TOKEN_JWT_AQUI
 
-@baseUrl = http://localhost:8085/api
-
-### ========== SOLICITUDES ==========
-
-### 1) Listar todas las solicitudes
+### Listar solicitudes
 GET {{baseUrl}}/solicitudes
+Authorization: Bearer {{token}}
 
 ###
 
-### 2) Obtener solicitud por ID
-GET {{baseUrl}}/solicitudes/1
-
-###
-
-### 3) Crear nueva solicitud
+### Crear solicitud
 POST {{baseUrl}}/solicitudes
+Authorization: Bearer {{token}}
 Content-Type: application/json
 
 {
   "clienteId": 1,
   "contenedor": {
-    "pesoKg": 3500,
-    "volumenM3": 18
+    "pesoKg": 2500,
+    "volumenM3": 12
   },
-  "origenDireccion": "Av. Corrientes 1500, CABA",
-  "destinoDireccion": "Bv. Oroño 500, Rosario"
+  "origenDireccion": "Calle 123, Córdoba",
+  "destinoDireccion": "Ruta 9 km 500"
 }
 
 ###
 
-### 4) Obtener seguimiento
-GET {{baseUrl}}/solicitudes/1/seguimiento
+### Obtener solicitud por ID
+@solicitudId = 1
+
+GET {{baseUrl}}/solicitudes/{{solicitudId}}
+Authorization: Bearer {{token}}
 
 ###
 
-### 5) Crear y asignar ruta a solicitud (CORREGIDO)
-POST {{baseUrl}}/solicitudes/2/ruta
+### Ver seguimiento de una solicitud
+GET {{baseUrl}}/solicitudes/{{solicitudId}}/seguimiento
+Authorization: Bearer {{token}}
 
 ###
 
-### 6) Eliminar solicitud
-DELETE {{baseUrl}}/solicitudes/2
+### Iniciar tramo
+@tramoId = 1
+
+PUT {{baseUrl}}/tramos/{{tramoId}}/iniciar
+Authorization: Bearer {{token}}
 
 ###
 
-### ========== RUTAS ==========
-
-### 7) Obtener ruta de solicitud
-GET {{baseUrl}}/rutas/solicitud/1
-
-###
-
-### ========== TRAMOS ==========
-
-### 8) Iniciar tramo
-PUT {{baseUrl}}/tramos/1/iniciar
-Content-Type: application/json
-
-{
-  "fechaHoraInicioReal": "2025-11-16T10:00:00"
-}
-
-###
-
-### 9) Finalizar tramo
-PUT {{baseUrl}}/tramos/1/finalizar
-Content-Type: application/json
-
-{
-  "fechaHoraFinReal": "2025-11-16T15:30:00"
-}
-
-###
-
-### ========== CONTENEDORES ==========
-
-### 10) Listar contenedores
-GET {{baseUrl}}/contenedores
-
-###
-
-### 11) Obtener contenedor por ID
-GET {{baseUrl}}/contenedores/1
-
-###
-
-### 12) Crear contenedor
-POST {{baseUrl}}/contenedores
-Content-Type: application/json
-
-{
-  "pesoKg": 4000,
-  "volumenM3": 20
-}
-
-###
-
-### 13) Eliminar contenedor
-DELETE {{baseUrl}}/contenedores/6
-
-###
+### Finalizar tramo
+PUT {{baseUrl}}/tramos/{{tramoId}}/finalizar
+Authorization: Bearer {{token}}

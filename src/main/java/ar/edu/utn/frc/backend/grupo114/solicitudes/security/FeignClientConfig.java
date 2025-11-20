@@ -1,4 +1,4 @@
-package ar.edu.utn.frc.backend.grupo114.solicitudes.config;
+package ar.edu.utn.frc.backend.grupo114.solicitudes.security;
 
 import feign.Logger;
 import feign.Request;

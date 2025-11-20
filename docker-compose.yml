@@ -1,5 +1,8 @@
 services:
 
+  # ============================================================
+  # 🗄 BASE DE DATOS DE SOLICITUDES
+  # ============================================================
   solicitudes-db:
     image: postgres:15
     container_name: solicitudes-db
@@ -15,18 +18,68 @@ services:
     networks:
       - solicitudes-net
 
+  # ============================================================
+  # 🗄 BASE DE DATOS DE USUARIOS  (AGREGADO – ERA LO QUE FALTABA)
+  # ============================================================
+  usuarios-db:
+    image: postgres:15
+    container_name: usuarios-db
+    restart: always
+    environment:
+      POSTGRES_DB: usuariosdb
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    ports:
+      - "5437:5432"
+    volumes:
+      - usuarios-data:/var/lib/postgresql/data
+    networks:
+      - solicitudes-net
+
+  # ============================================================
+  # 👤 MICRO SERVICIO USUARIOS
+  # ============================================================
+  ms-usuarios:
+    build:
+      context: ../MS-Usuarios
+    container_name: ms-usuarios
+    depends_on:
+      - usuarios-db
+    environment:
+      SPRING_PROFILES_ACTIVE: docker
+      SPRING_DATASOURCE_URL: jdbc:postgresql://usuarios-db:5432/usuariosdb
+      SPRING_DATASOURCE_USERNAME: postgres
+      SPRING_DATASOURCE_PASSWORD: postgres
+    ports:
+      - "8081:8081"
+    networks:
+      - solicitudes-net
+
+  # ============================================================
+  # 📦 MICRO SERVICIO SOLICITUDES
+  # ============================================================
   ms-solicitudes:
     build: .
     container_name: ms-solicitudes
     depends_on:
       - solicitudes-db
+      - ms-usuarios
     ports:
       - "8085:8085"
     environment:
       SPRING_PROFILES_ACTIVE: docker
+
+      # BASE DE DATOS DE ESTE MS
       SPRING_DATASOURCE_URL: jdbc:postgresql://solicitudes-db:5432/solicitudesdb
       SPRING_DATASOURCE_USERNAME: postgres
       SPRING_DATASOURCE_PASSWORD: postgres
+
+      # FEIGN → URL CORRECTA DE MS-USUARIOS
+      MS_USUARIOS_URL: http://ms-usuarios:8081/api
+      # si tu property es ms.usuarios.url entonces:
+      # ms.usuarios.url=http://ms-usuarios:8081/api
+
+      # JPA / DATA.SQL
       SPRING_JPA_HIBERNATE_DDL_AUTO: update
       SPRING_JPA_DEFER_DATASOURCE_INITIALIZATION: "true"
       SPRING_SQL_INIT_MODE: always
@@ -34,6 +87,9 @@ services:
     networks:
       - solicitudes-net
 
+  # ============================================================
+  # 🐘 PGADMIN
+  # ============================================================
   pgadmin:
     image: dpage/pgadmin4
     container_name: pgadmin
@@ -45,11 +101,19 @@ services:
       - "5050:80"
     depends_on:
       - solicitudes-db
+      - usuarios-db
     networks:
       - solicitudes-net
 
+# ============================================================
+# 📦 VOLUMENES
+# ============================================================
 volumes:
   solicitudes-data:
+  usuarios-data:
 
+# ============================================================
+# 🌐 RED
+# ============================================================
 networks:
   solicitudes-net:

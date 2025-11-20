@@ -1,4 +1,4 @@
-package ar.edu.utn.frc.backend.grupo114.solicitudes.config;
+package ar.edu.utn.frc.backend.grupo114.solicitudes.security;
 
 import io.swagger.v3.oas.models.OpenAPI;
 import io.swagger.v3.oas.models.info.Info;
