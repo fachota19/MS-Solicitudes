@@ -73,6 +73,7 @@ services:
       SPRING_DATASOURCE_URL: jdbc:postgresql://solicitudes-db:5432/solicitudesdb
       SPRING_DATASOURCE_USERNAME: postgres
       SPRING_DATASOURCE_PASSWORD: postgres
+      SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_ISSUER_URI: http://keycloak:8080/realms/tpi-backend
 
       # FEIGN → URL CORRECTA DE MS-USUARIOS
       MS_USUARIOS_URL: http://ms-usuarios:8081/api
