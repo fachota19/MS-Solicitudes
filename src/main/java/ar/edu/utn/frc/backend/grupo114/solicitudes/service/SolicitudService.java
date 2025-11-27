@@ -21,6 +21,7 @@ public interface SolicitudService {
 
     // 🔹 Obtener seguimiento (estado + tramos + ruta)
     Optional<Map<String, Object>> obtenerSeguimiento(Long id);
+    Optional<Map<String, Object>> obtenerSeguimientoPorNumero(String numeroSeguimiento);
 
     // 🔹 Asignar una ruta a una solicitud
     Solicitud asignarRuta(Long solicitudId, Long rutaId);

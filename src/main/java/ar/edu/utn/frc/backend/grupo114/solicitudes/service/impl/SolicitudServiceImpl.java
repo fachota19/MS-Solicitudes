@@ -96,25 +96,13 @@ public class SolicitudServiceImpl implements SolicitudService {
 
     @Override
     public Optional<Map<String, Object>> obtenerSeguimiento(Long id) {
-        return solicitudRepository.findById(id).map(s -> {
-            Map<String, Object> seg = new LinkedHashMap<>();
-            seg.put("id", s.getId());
-            seg.put("numeroSeguimiento", s.getNumeroSeguimiento());
-            seg.put("estado", s.getEstado().getNombre());
-            seg.put("origen", s.getOrigenDireccion());
-            seg.put("destino", s.getDestinoDireccion());
-            seg.put("fechaCreacion", s.getFechaCreacion());
-            seg.put("costoEstimado", s.getCostoEstimado());
+        return solicitudRepository.findById(id).map(this::mapSeguimiento);
+    }
 
-            if (s.getRuta() != null && s.getRuta().getTramos() != null) {
-                seg.put("rutaId", s.getRuta().getId());
-                seg.put("cantidadTramos", s.getRuta().getTramos().size());
-            } else {
-                seg.put("rutaId", null);
-                seg.put("cantidadTramos", 0);
-            }
-            return seg;
-        });
+    @Override
+    public Optional<Map<String, Object>> obtenerSeguimientoPorNumero(String numeroSeguimiento) {
+        Solicitud solicitud = solicitudRepository.findByNumeroSeguimiento(numeroSeguimiento);
+        return Optional.ofNullable(solicitud).map(this::mapSeguimiento);
     }
 
     @Override
@@ -140,5 +128,25 @@ public class SolicitudServiceImpl implements SolicitudService {
 
         solicitud.setId(id);
         return solicitudRepository.save(solicitud);
+    }
+
+    private Map<String, Object> mapSeguimiento(Solicitud s) {
+        Map<String, Object> seg = new LinkedHashMap<>();
+        seg.put("id", s.getId());
+        seg.put("numeroSeguimiento", s.getNumeroSeguimiento());
+        seg.put("estado", s.getEstado().getNombre());
+        seg.put("origen", s.getOrigenDireccion());
+        seg.put("destino", s.getDestinoDireccion());
+        seg.put("fechaCreacion", s.getFechaCreacion());
+        seg.put("costoEstimado", s.getCostoEstimado());
+
+        if (s.getRuta() != null && s.getRuta().getTramos() != null) {
+            seg.put("rutaId", s.getRuta().getId());
+            seg.put("cantidadTramos", s.getRuta().getTramos().size());
+        } else {
+            seg.put("rutaId", null);
+            seg.put("cantidadTramos", 0);
+        }
+        return seg;
     }
 }

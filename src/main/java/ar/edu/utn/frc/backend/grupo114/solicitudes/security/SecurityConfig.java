@@ -36,22 +36,26 @@ public class SecurityConfig {
                 
                 // 1. Cliente crea solicitud (SOLO POST)
                 // Si no pones HttpMethod.POST, esto atrapa el GET y bloquea al Operador
-                .requestMatchers(HttpMethod.POST, "/solicitudes").hasRole("CLIENTE")
+                .requestMatchers(HttpMethod.POST, "/api/solicitudes").hasRole("CLIENTE")
 
                 // 2. Operador lista solicitudes (SOLO GET)
                 // Aquí podrías agregar "CLIENTE" si ellos también pueden listar las suyas
-                .requestMatchers(HttpMethod.GET, "/solicitudes").hasRole("OPERADOR")
+                .requestMatchers(HttpMethod.GET, "/api/solicitudes").hasRole("OPERADOR")
+                .requestMatchers(HttpMethod.GET, "/api/solicitudes/ruta-tentativa")
+                        .hasAnyRole("CLIENTE", "OPERADOR")
 
                 // 3. Ver seguimiento (GET específico)
-                .requestMatchers(HttpMethod.GET, "/solicitudes/*/seguimiento")
+                .requestMatchers(HttpMethod.GET, "/api/solicitudes/*/seguimiento")
+                        .hasAnyRole("CLIENTE", "OPERADOR")
+                .requestMatchers(HttpMethod.GET, "/api/solicitudes/seguimiento/**")
                         .hasAnyRole("CLIENTE", "OPERADOR")
 
                 // 4. Transportista gestiona tramos
-                .requestMatchers("/tramos/*/iniciar").hasRole("TRANSPORTISTA")
-                .requestMatchers("/tramos/*/finalizar").hasRole("TRANSPORTISTA")
+                .requestMatchers("/api/tramos/*/iniciar").hasRole("TRANSPORTISTA")
+                .requestMatchers("/api/tramos/*/finalizar").hasRole("TRANSPORTISTA")
 
                 // 5. Operador puede hacer todo lo demás en /solicitudes (PUT, DELETE, get by id)
-                .requestMatchers("/solicitudes/**").hasRole("OPERADOR")
+                .requestMatchers("/api/solicitudes/**").hasRole("OPERADOR")
 
                 // 6. Swagger y Docs (Público)
                 .requestMatchers(

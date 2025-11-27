@@ -25,6 +25,8 @@ import org.springframework.web.server.ResponseStatusException;
 
 import java.time.LocalDate;
 import java.util.List;
+import java.util.Map;
+import java.util.LinkedHashMap;
 
 @RestController
 @RequestMapping("/api/solicitudes")
@@ -67,7 +69,7 @@ public class SolicitudController {
     @Operation(summary = "Obtener solicitud por ID")
     @ApiResponse(responseCode = "200", description = "Solicitud encontrada")
     @ApiResponse(responseCode = "404", description = "Solicitud no encontrada")
-    @GetMapping("/{id}")
+    @GetMapping("/{id:\\d+}")
     public ResponseEntity<SolicitudDTO> obtenerPorId(@Parameter(description = "ID solicitud") @PathVariable Long id) {
         return solicitudService.obtenerPorId(id)
                 .map(SolicitudMapper::toDTO)
@@ -107,16 +109,66 @@ public class SolicitudController {
     }
 
     @Operation(summary = "Obtener seguimiento")
-    @GetMapping("/{id}/seguimiento")
+    @GetMapping("/{id:\\d+}/seguimiento")
     public ResponseEntity<?> obtenerSeguimiento(@PathVariable Long id) {
         return solicitudService.obtenerSeguimiento(id)
                 .map(ResponseEntity::ok)
                 .orElse(ResponseEntity.notFound().build());
     }
 
+    @Operation(summary = "Seguimiento por número de seguimiento")
+    @GetMapping("/seguimiento/{numero}")
+    public ResponseEntity<?> obtenerSeguimientoPorNumero(@PathVariable String numero) {
+        return solicitudService.obtenerSeguimientoPorNumero(numero)
+                .map(ResponseEntity::ok)
+                .orElse(ResponseEntity.notFound().build());
+    }
+
+    @Operation(
+            summary = "Consultar ruta tentativa",
+            description = "Devuelve una ruta sugerida con tiempos y costos estimados para un origen/destino/peso/volumen"
+    )
+    @GetMapping("/ruta-tentativa")
+    public ResponseEntity<?> rutaTentativa(
+            @RequestParam String origen,
+            @RequestParam String destino,
+            @RequestParam Double pesoKg,
+            @RequestParam Double volumenM3
+    ) {
+        // Respuesta simplificada: demo de tramos y cálculos estimados
+        Map<String, Object> tramo1 = Map.of(
+                "origen", origen,
+                "destino", "Depósito intermedio",
+                "distanciaKm", 350,
+                "tiempoHs", 5
+        );
+        Map<String, Object> tramo2 = Map.of(
+                "origen", "Depósito intermedio",
+                "destino", destino,
+                "distanciaKm", 400,
+                "tiempoHs", 6
+        );
+
+        double distanciaTotalKm = 350 + 400;
+        double tiempoTotalHs = 5 + 6;
+        double costoEstimado = distanciaTotalKm * 120; // costo base demo
+
+        Map<String, Object> body = new LinkedHashMap<>();
+        body.put("origen", origen);
+        body.put("destino", destino);
+        body.put("pesoKg", pesoKg);
+        body.put("volumenM3", volumenM3);
+        body.put("distanciaTotalKm", distanciaTotalKm);
+        body.put("tiempoTotalHs", tiempoTotalHs);
+        body.put("costoEstimado", costoEstimado);
+        body.put("tramos", List.of(tramo1, tramo2));
+
+        return ResponseEntity.ok(body);
+    }
+
     @Operation(summary = "Crear y asignar ruta", description = "Genera ruta y cambia estado a PROGRAMADA")
     @ApiResponse(responseCode = "200", description = "Ruta asignada, estado actualizado")
-    @PostMapping("/{id}/ruta")
+    @PostMapping("/{id:\\d+}/ruta")
     public ResponseEntity<SolicitudDTO> crearYAsignarRuta(@PathVariable("id") Long solicitudId) {
 
         // 1. Buscar solicitud
@@ -146,7 +198,7 @@ public class SolicitudController {
     }
 
     @Operation(summary = "Eliminar solicitud")
-    @DeleteMapping("/{id}")
+    @DeleteMapping("/{id:\\d+}")
     public ResponseEntity<Void> eliminar(@PathVariable Long id) {
         solicitudService.eliminar(id);
         return ResponseEntity.noContent().build();
